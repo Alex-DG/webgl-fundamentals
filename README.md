@@ -1,5 +1,11 @@
-Resources:
+Resources: https://webgl2fundamentals.org/
+
+Setup:
 
 ```
-https://webglfundamentals.org/webgl/lessons/webgl-fundamentals.html
+`npm install`
+`npm start`
+
+visit `http://localhost:3000`
+
 ```
