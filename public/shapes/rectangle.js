@@ -1,20 +1,27 @@
-// WebGL2 - Fundamentals
-// from https://webgl2fundamentals.org/webgl/webgl-fundamentals.html
-
 'use strict';
 
 var vertexShaderSource = `#version 300 es
 
 // an attribute is an input (in) to a vertex shader.
 // It will receive data from a buffer
-in vec4 a_position;
+in vec2 a_position;
+
+// Used to pass in the resolution of the canvas
+uniform vec2 u_resolution;
 
 // all shaders have a main function
 void main() {
 
-  // gl_Position is a special variable a vertex shader
-  // is responsible for setting
-  gl_Position = a_position;
+  // convert the position from pixels to 0.0 to 1.0
+  vec2 zeroToOne = a_position / u_resolution;
+
+  // convert from 0->1 to 0->2
+  vec2 zeroToTwo = zeroToOne * 2.0;
+
+  // convert from 0->2 to -1->+1 (clipspace)
+  vec2 clipSpace = zeroToTwo - 1.0;
+
+  gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
 }
 `;
 
@@ -33,35 +40,6 @@ void main() {
 }
 `;
 
-function createShader(gl, type, source) {
-  var shader = gl.createShader(type);
-  gl.shaderSource(shader, source);
-  gl.compileShader(shader);
-  var success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
-  if (success) {
-    return shader;
-  }
-
-  console.log(gl.getShaderInfoLog(shader)); // eslint-disable-line
-  gl.deleteShader(shader);
-  return undefined;
-}
-
-function createProgram(gl, vertexShader, fragmentShader) {
-  var program = gl.createProgram();
-  gl.attachShader(program, vertexShader);
-  gl.attachShader(program, fragmentShader);
-  gl.linkProgram(program);
-  var success = gl.getProgramParameter(program, gl.LINK_STATUS);
-  if (success) {
-    return program;
-  }
-
-  console.log(gl.getProgramInfoLog(program)); // eslint-disable-line
-  gl.deleteProgram(program);
-  return undefined;
-}
-
 function main() {
   // Get A WebGL context
   var canvas = document.getElementById('c');
@@ -70,27 +48,30 @@ function main() {
     return;
   }
 
-  // create GLSL shaders, upload the GLSL source, compile the shaders
-  var vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
-  var fragmentShader = createShader(
-    gl,
-    gl.FRAGMENT_SHADER,
+  // Use our boilerplate utils to compile the shaders and link into a program
+  var program = webglUtils.createProgramFromSources(gl, [
+    vertexShaderSource,
     fragmentShaderSource
-  );
-
-  // Link the two shaders into a program
-  var program = createProgram(gl, vertexShader, fragmentShader);
+  ]);
 
   // look up where the vertex data needs to go.
   var positionAttributeLocation = gl.getAttribLocation(program, 'a_position');
 
+  // look up uniform locations
+  var resolutionUniformLocation = gl.getUniformLocation(
+    program,
+    'u_resolution'
+  );
+
+  // Create a buffer and put a single pixel space rectangle in
+  // it (2 triangles)
   // Create a buffer and put three 2d clip space points in it
   var positionBuffer = gl.createBuffer();
 
   // Bind it to ARRAY_BUFFER (think of it as ARRAY_BUFFER = positionBuffer)
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
-  var positions = [0, 0, 0, 0.5, 0.7, 0];
+  var positions = [10, 20, 80, 20, 10, 30, 10, 30, 80, 20, 80, 30];
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
   // Create a vertex array object (attribute state)
@@ -124,7 +105,7 @@ function main() {
 
   // Clear the canvas
   gl.clearColor(0, 0, 0, 0);
-  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
   // Tell it to use our program (pair of shaders)
   gl.useProgram(program);
@@ -132,10 +113,14 @@ function main() {
   // Bind the attribute/buffer set we want.
   gl.bindVertexArray(vao);
 
+  // Pass in the canvas resolution so we can convert from
+  // pixels to clipspace in the shader
+  gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
+
   // draw
   var primitiveType = gl.TRIANGLES;
   var offset = 0;
-  var count = 3;
+  var count = 6;
   gl.drawArrays(primitiveType, offset, count);
 }
 
