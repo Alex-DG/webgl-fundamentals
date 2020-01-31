@@ -11,7 +11,7 @@
     "type": "git",
     "url": "git+https://github.com/Alex-DG/webgl-fundamentals.git"
   },
-  "author": "Alex Di Guida",
+  "author": "Alex Di Guida <alexandre.diguida@gmail.com>",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/Alex-DG/webgl-fundamentals/issues"

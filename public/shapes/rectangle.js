@@ -31,18 +31,19 @@ var fragmentShaderSource = `#version 300 es
 // to pick one. mediump is a good default. It means "medium precision"
 precision mediump float;
 
-// we need to declare an output for the fragment shader
+uniform vec4 u_color;
 out vec4 outColor;
 
 void main() {
   // Just set the output to a constant redish-purple
-  outColor = vec4(1, 0, 0.5, 1);
+  outColor = u_color; // Input color
+  // outColor = vec4(1, 0, 0.5, 1); // Static color
 }
 `;
 
 function main() {
   // Get A WebGL context
-  var canvas = document.getElementById('c');
+  var canvas = document.getElementById('rectangle');
   var gl = canvas.getContext('webgl2');
   if (!gl) {
     return;
@@ -62,6 +63,7 @@ function main() {
     program,
     'u_resolution'
   );
+  var colorLocation = gl.getUniformLocation(program, 'u_color');
 
   // Create a buffer and put a single pixel space rectangle in
   // it (2 triangles)
@@ -116,6 +118,7 @@ function main() {
   // Pass in the canvas resolution so we can convert from
   // pixels to clipspace in the shader
   gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
+  gl.uniform4f(colorLocation, Math.random(), Math.random(), Math.random(), 1);
 
   // draw
   var primitiveType = gl.TRIANGLES;
