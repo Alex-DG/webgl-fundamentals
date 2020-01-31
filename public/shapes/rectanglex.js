@@ -1,5 +1,8 @@
 'use strict';
 
+/** @type {WebGL2RenderingContext} */ var gl;
+/** @type {HTMLCanvasElement} */ var canvas;
+
 var vertexShaderSource = `#version 300 es
 
 // an attribute is an input (in) to a vertex shader.
@@ -41,8 +44,8 @@ void main() {
 
 function main() {
   // Get A WebGL context
-  var canvas = document.getElementById('cx');
-  var gl = canvas.getContext('webgl2');
+  canvas = document.getElementById('cx');
+  gl = canvas.getContext('webgl2');
   if (!gl) {
     return;
   }
